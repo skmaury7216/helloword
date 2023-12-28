@@ -1,0 +1,27 @@
+image: maven
+stages:
+    - build
+    - deploy
+build_webaap:
+  stage: build
+  script:
+      - echo "Maven clean started"
+      - "mvn clean"
+      - echo "Maven clean install started"
+      - "mvn clean install"
+      - pwd
+  artifacts:
+      paths: 
+        - /home/gitlab-runner/builds/iVdxxtWe/0/my-group28/helloworld/webapp/target/webapp.war
+deploy_webapp:
+    stage:   deploy
+    before_script:
+      - command -v ssh-agent >/dev/null ||(apk add --update openssh)
+      - eval $(ssh-agent -s)
+      - echo "$SSH_PRIVATE_KEY" | tr -d '\r'|ssh-add -
+      - mkdir -p ~/.ssh
+      - chmod 700 ~/.ssh	
+      - ssh-keyscan $EC2_IPADDRESS >> ~/.ssh/known_hosts
+      - chmod 664 ~/.ssh/known_hosts 
+    script:
+        scp -o StrictHostKeyChecking=no /home/gitlab-runner/builds/iVdxxtWe/0/my-group28/helloworld/webapp/target/webapp.war /opt/tomcat/webapps 
